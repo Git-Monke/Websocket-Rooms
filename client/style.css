@@ -138,6 +138,7 @@
   position: absolute;
   display: grid;
   grid-template-rows: 1fr fit-content(0px);
+  transition: left 0.5s ease-out;
 }
 
 #messages {
