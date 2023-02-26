@@ -69,17 +69,17 @@ function create_room(data, ws, id) {
   }
 
   let code = gen_code(6);
+  let name = data.name || `${clients[id].username}'s Room`;
 
   console.log(
-    `${chalk.green(clients[id].username)} is creating room ${chalk.blueBright(
-      code
-    )}`
+    `${chalk.green(clients[id].username)} created ${chalk.blueBright(name)}`
   );
 
   rooms[id] = {
     clients: {},
     code: code,
     id: id,
+    name: name,
   };
 
   ws.send(
@@ -90,7 +90,9 @@ function create_room(data, ws, id) {
 
   if (data.public) {
     emit("server::new_public_room", {
+      name: name,
       code: code,
+      id: id,
     });
   }
 }
@@ -103,9 +105,7 @@ function join_room(data, ws, id) {
   }
 
   console.log(
-    `${chalk.green(clients[id].username)} is joining room ${chalk.blueBright(
-      room.code
-    )}`
+    `${chalk.green(clients[id].username)} joined ${chalk.blueBright(room.name)}`
   );
 
   room.clients[id] = ws;
@@ -178,14 +178,22 @@ server.addListener("connection", (ws) => {
 
   ws.on("close", (_) => {
     if (rooms[userid]) {
+      if (rooms[userid].public) {
+        emit(
+          wrap("server::delete_public_room", {
+            id: userid,
+          })
+        );
+      }
+
       for (let [_, ws] of Object.entries(rooms[userid].clients)) {
         ws.send(wrap("server::leave_room", {}));
       }
 
       console.log(
-        `${chalk.green(
-          clients[userid].username
-        )} is deleting room ${chalk.blueBright(rooms[userid].code)}`
+        `${chalk.green(clients[userid].username)} deleted ${chalk.blueBright(
+          rooms[userid].name
+        )}`
       );
 
       delete rooms[userid];

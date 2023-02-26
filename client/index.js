@@ -13,6 +13,8 @@ const join_code = document.getElementById("join-code");
 
 const room_id_text = document.getElementById("room-id-text");
 const room_info = document.getElementById("room-info");
+const rooms_container = document.getElementById("rooms");
+const room_name_input = document.getElementById("room-name");
 
 let username;
 
@@ -47,11 +49,33 @@ function attempt_join(data) {
   );
 }
 
+function make_room(data) {
+  let new_div = document.createElement("div");
+  let room_name = document.createElement("h3");
+  let room_id = document.createElement("h3");
+
+  room_name.innerHTML = data.name;
+  room_id.innerHTML = `Room code: ${data.code}`;
+
+  new_div.id = data.id;
+  new_div.classList.add("public-room");
+  new_div.appendChild(room_name);
+  new_div.appendChild(room_id);
+
+  rooms_container.appendChild(new_div);
+}
+
+function delete_room(data) {
+  document.getElementById(data.id).remove();
+}
+
 let handles = {
   // "serverorclient::handle-name": functionname
   "server::username": set_username,
   "server::attempt_join": attempt_join,
   "server::join_room": join_room,
+  "server::new_public_room": make_room,
+  "server::delete_public_room": delete_room,
 };
 
 function handle(payload) {
@@ -105,7 +129,7 @@ document.addEventListener("keypress", (keyevent) => {
     if (
       username_input.value != username &&
       username_input == document.activeElement &&
-      username_input.value.length <= 21 &&
+      username_input.value.length <= 15 &&
       username_input.value.length >= 3
     ) {
       username_input.value = format_username(username_input.value);
@@ -122,9 +146,16 @@ document.addEventListener("keypress", (keyevent) => {
 });
 
 create_room_button.addEventListener("click", (_) => {
+  let room_name = room_name_input.value;
+
+  if (room_name.length > 0 && room_name < 3) {
+    return;
+  }
+
   ws.send(
     wrap("client::create_room", {
       public: publicity_box.checked,
+      name: (room_name.length > 0 && room_name.slice(0, 15)) || null,
     })
   );
 });
