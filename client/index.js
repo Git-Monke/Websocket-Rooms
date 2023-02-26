@@ -15,6 +15,7 @@ const room_id_text = document.getElementById("room-id-text");
 const room_info = document.getElementById("room-info");
 const rooms_container = document.getElementById("rooms");
 const room_name_input = document.getElementById("room-name");
+const server_down = document.getElementById("server-down");
 
 let username;
 
@@ -74,6 +75,14 @@ function leave_room_handle(_) {
   content.style = "top: 50%";
 }
 
+function display_rooms(data) {
+  console.log(data);
+
+  for (room in data) {
+    make_room(room);
+  }
+}
+
 let handles = {
   // "serverorclient::handle-name": functionname
   "server::username": set_username,
@@ -82,6 +91,7 @@ let handles = {
   "server::new_public_room": make_room,
   "server::delete_public_room": delete_room,
   "server::leave_room": leave_room_handle,
+  "server::public_rooms": display_rooms,
 };
 
 function handle(payload) {
@@ -108,6 +118,8 @@ function connect() {
 
   ws.addEventListener("open", (_) => {
     console.log("Successfully connected to the server!");
+    server_down.style = "display: none";
+    ws.send(wrap("client::get_public_rooms", {}));
   });
 
   ws.addEventListener("message", (payload) => {
@@ -121,6 +133,12 @@ function connect() {
 
   ws.addEventListener("close", (_) => {
     console.log("Connection closed. Retrying connection.");
+
+    server_down.style = "display: flex";
+
+    rooms_container.childNodes.forEach((child) => {
+      child.remove();
+    });
 
     setTimeout(() => {
       connect();

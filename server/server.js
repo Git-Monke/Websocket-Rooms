@@ -132,12 +132,25 @@ function leave_room_handle(_, __, id) {
   }
 }
 
+function get_pub_rooms(_, ws) {
+  let rooms = [];
+
+  for (let [_, room] of Object.entries(rooms)) {
+    if (room.public) {
+      rooms.push(room);
+    }
+  }
+
+  ws.send(wrap("server::public_rooms", rooms));
+}
+
 let handles = {
   // "serverorclient::handle-name": functionname
   "client::set_username": set_username,
   "client::create_room": create_room,
   "client::join_room": join_room,
   "client::leave_room": leave_room_handle,
+  "client::get_public_rooms": get_pub_rooms,
 };
 
 function handle(payload, ws, id) {
