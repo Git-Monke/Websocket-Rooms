@@ -76,9 +76,7 @@ function leave_room_handle(_) {
 }
 
 function display_rooms(data) {
-  console.log(data);
-
-  for (room in data) {
+  for (room of data) {
     make_room(room);
   }
 }
@@ -135,6 +133,8 @@ function connect() {
     console.log("Connection closed. Retrying connection.");
 
     server_down.style = "display: flex";
+    room_info.style = "top: -10%;";
+    content.style = "top: 50%";
 
     rooms_container.childNodes.forEach((child) => {
       child.remove();

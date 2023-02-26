@@ -133,15 +133,19 @@ function leave_room_handle(_, __, id) {
 }
 
 function get_pub_rooms(_, ws) {
-  let rooms = [];
+  let pub_rooms = [];
 
   for (let [_, room] of Object.entries(rooms)) {
     if (room.public) {
-      rooms.push(room);
+      pub_rooms.push({
+        code: room.code,
+        name: room.name,
+        id: room.id,
+      });
     }
   }
 
-  ws.send(wrap("server::public_rooms", rooms));
+  ws.send(wrap("server::public_rooms", pub_rooms));
 }
 
 let handles = {
