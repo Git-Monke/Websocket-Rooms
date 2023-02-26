@@ -52,6 +52,10 @@ function chat(userdata, text, style) {
 
   messages_container.appendChild(new_chat);
 
+  if (messages_container.childNodes.length > 20) {
+    messages_container.firstChild.remove();
+  }
+
   if (at_bottom) {
     messages_container.scrollTop = messages_container.scrollHeight;
   }
