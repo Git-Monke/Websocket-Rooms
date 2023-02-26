@@ -6,7 +6,13 @@ const username_error_output = document.getElementById("username-output");
 
 const publicity_box = document.getElementById("room-publicity");
 
-const create_room = document.getElementById("create-room");
+const content = document.getElementById("content");
+const create_room_button = document.getElementById("create-room");
+const join_room_button = document.getElementById("join");
+const join_code = document.getElementById("join-code");
+
+const room_id_text = document.getElementById("room-id-text");
+const room_info = document.getElementById("room-info");
 
 let username;
 
@@ -27,9 +33,25 @@ function set_username(data) {
   username = data.username;
 }
 
+function join_room(data) {
+  room_id_text.innerHTML = data.code;
+  room_info.style = "top: 1%;";
+  content.style = "top: -30%";
+}
+
+function attempt_join(data) {
+  ws.send(
+    wrap("client::join_room", {
+      code: data.code,
+    })
+  );
+}
+
 let handles = {
   // "serverorclient::handle-name": functionname
   "server::username": set_username,
+  "server::attempt_join": attempt_join,
+  "server::join_room": join_room,
 };
 
 function handle(payload) {
@@ -99,12 +121,18 @@ document.addEventListener("keypress", (keyevent) => {
   }
 });
 
-create_room.addEventListener("click", (_) => {
-  // ws.send(
-  //   wrap("client::create_room", {
-  //     public: (publicity_box.value == "on" && true) || false,
-  //   })
-  // );
+create_room_button.addEventListener("click", (_) => {
+  ws.send(
+    wrap("client::create_room", {
+      public: publicity_box.checked,
+    })
+  );
+});
+
+join_room_button.addEventListener("click", (_) => {
+  if (join_code.value != "" && join_code.value.match(/^[A-Za-z]+$/)) {
+    attempt_join(join_code.value);
+  }
 });
 
 username_input.addEventListener("input", (_) => {

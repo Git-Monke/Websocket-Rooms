@@ -11,6 +11,8 @@ let rooms = {};
 
 console.log(chalk.green("Server is online!"));
 
+// ----- AUXILLARY FUNCTIONS -----
+
 function wrap(request, data) {
   return JSON.stringify({
     request: request,
@@ -28,6 +30,30 @@ function gen_code(length) {
   return result;
 }
 
+function emit(request, data) {
+  for (let [_, client] of Object.entries(clients)) {
+    client.ws.send(wrap(request, data));
+  }
+}
+
+function get_room(code) {
+  for (let [_, room] of Object.entries(rooms)) {
+    if (room.code == code) {
+      return room;
+    }
+  }
+
+  return false;
+}
+
+function leave_room(id) {
+  let client = clients[id];
+  delete rooms[client.roomid].clients[id];
+  client.roomid = null;
+}
+
+// ----- HANDLERS -----
+
 function set_username(data, _, id) {
   console.log(
     `${chalk.green(
@@ -37,9 +63,66 @@ function set_username(data, _, id) {
   clients[id].username = data.username;
 }
 
+function create_room(data, ws, id) {
+  if (rooms[id]) {
+    return;
+  }
+
+  let code = gen_code(6);
+
+  console.log(
+    `${chalk.green(clients[id].username)} is creating room ${chalk.blueBright(
+      code
+    )}`
+  );
+
+  rooms[id] = {
+    clients: {},
+    code: code,
+    id: id,
+  };
+
+  ws.send(
+    wrap("server::attempt_join", {
+      code: code,
+    })
+  );
+
+  if (data.public) {
+    emit("server::new_public_room", {
+      code: code,
+    });
+  }
+}
+
+function join_room(data, ws, id) {
+  let room = get_room(data.code);
+
+  if (!room) {
+    return;
+  }
+
+  console.log(
+    `${chalk.green(clients[id].username)} is joining room ${chalk.blueBright(
+      room.code
+    )}`
+  );
+
+  room.clients[id] = ws;
+  clients[id].roomid = room.id;
+
+  ws.send(
+    wrap("server::join_room", {
+      code: data.code,
+    })
+  );
+}
+
 let handles = {
   // "serverorclient::handle-name": functionname
   "client::set_username": set_username,
+  "client::create_room": create_room,
+  "client::join_room": join_room,
 };
 
 function handle(payload, ws, id) {
@@ -75,6 +158,7 @@ server.addListener("connection", (ws) => {
     ws: ws,
     username: username,
     userid: userid,
+    roomid: null,
   };
 
   ws.send(
@@ -93,6 +177,22 @@ server.addListener("connection", (ws) => {
   });
 
   ws.on("close", (_) => {
+    if (rooms[userid]) {
+      for (let [_, ws] of Object.entries(rooms[userid].clients)) {
+        ws.send(wrap("server::leave_room", {}));
+      }
+
+      console.log(
+        `${chalk.green(
+          clients[userid].username
+        )} is deleting room ${chalk.blueBright(rooms[userid].code)}`
+      );
+
+      delete rooms[userid];
+    } else if (clients[userid].roomid) {
+      leave_room(userid);
+    }
+
     delete clients[userid];
   });
 });
