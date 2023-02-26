@@ -119,11 +119,18 @@ function join_room(data, ws, id) {
   );
 }
 
+function leave_room(_, __, id) {
+  if (clients[id].roomid) {
+    leave_room(id);
+  }
+}
+
 let handles = {
   // "serverorclient::handle-name": functionname
   "client::set_username": set_username,
   "client::create_room": create_room,
   "client::join_room": join_room,
+  "client::leave_room": leave_room,
 };
 
 function handle(payload, ws, id) {
@@ -180,11 +187,9 @@ server.addListener("connection", (ws) => {
   ws.on("close", (_) => {
     if (rooms[userid]) {
       if (rooms[userid].public) {
-        emit(
-          wrap("server::delete_public_room", {
-            id: userid,
-          })
-        );
+        emit("server::delete_public_room", {
+          id: userid,
+        });
       }
 
       for (let [_, ws] of Object.entries(rooms[userid].clients)) {

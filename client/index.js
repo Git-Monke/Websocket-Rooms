@@ -116,6 +116,8 @@ function connect() {
   ws.addEventListener("close", (_) => {
     console.log("Connection closed. Retrying connection.");
 
+    ws.send(wrap("client::leave_room", {}));
+
     setTimeout(() => {
       connect();
     }, 1000);
@@ -161,8 +163,12 @@ create_room_button.addEventListener("click", (_) => {
 });
 
 join_room_button.addEventListener("click", (_) => {
-  if (join_code.value != "" && join_code.value.match(/^[A-Za-z]+$/)) {
-    attempt_join(join_code.value);
+  if (
+    join_code.value != "" &&
+    join_code.value.length == 6 &&
+    join_code.value.match(/^[A-Za-z]+$/)
+  ) {
+    attempt_join({ code: join_code.value });
   }
 });
 
