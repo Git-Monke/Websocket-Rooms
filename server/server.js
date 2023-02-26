@@ -80,6 +80,7 @@ function create_room(data, ws, id) {
     code: code,
     id: id,
     name: name,
+    public: data.public,
   };
 
   ws.send(
