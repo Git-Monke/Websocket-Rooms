@@ -133,7 +133,7 @@
   width: 30vw;
   height: 30vh;
   top: 100%;
-  left: 0%;
+  left: -50%;
   transform: translate(1%, -102%);
   position: absolute;
   display: grid;
