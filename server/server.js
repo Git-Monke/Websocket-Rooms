@@ -48,6 +48,13 @@ function get_room(code) {
 
 function leave_room(id) {
   let client = clients[id];
+
+  console.log(
+    `${chalk.green(client.username)} is leaving ${chalk.blueBright(
+      rooms[client.roomid].name
+    )}`
+  );
+
   delete rooms[client.roomid].clients[id];
   client.roomid = null;
 }
@@ -119,7 +126,7 @@ function join_room(data, ws, id) {
   );
 }
 
-function leave_room(_, __, id) {
+function leave_room_handle(_, __, id) {
   if (clients[id].roomid) {
     leave_room(id);
   }
@@ -130,7 +137,7 @@ let handles = {
   "client::set_username": set_username,
   "client::create_room": create_room,
   "client::join_room": join_room,
-  "client::leave_room": leave_room,
+  "client::leave_room": leave_room_handle,
 };
 
 function handle(payload, ws, id) {

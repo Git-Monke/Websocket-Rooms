@@ -69,6 +69,11 @@ function delete_room(data) {
   document.getElementById(data.id).remove();
 }
 
+function leave_room_handle(_) {
+  room_info.style = "top: -10%;";
+  content.style = "top: 50%";
+}
+
 let handles = {
   // "serverorclient::handle-name": functionname
   "server::username": set_username,
@@ -76,6 +81,7 @@ let handles = {
   "server::join_room": join_room,
   "server::new_public_room": make_room,
   "server::delete_public_room": delete_room,
+  "server::leave_room": leave_room_handle,
 };
 
 function handle(payload) {
@@ -115,8 +121,6 @@ function connect() {
 
   ws.addEventListener("close", (_) => {
     console.log("Connection closed. Retrying connection.");
-
-    ws.send(wrap("client::leave_room", {}));
 
     setTimeout(() => {
       connect();
