@@ -47,16 +47,20 @@ function get_room(code) {
 }
 
 function leave_room(id) {
-  let client = clients[id];
+  try {
+    let client = clients[id];
 
-  console.log(
-    `${chalk.green(client.username)} is leaving ${chalk.blueBright(
-      rooms[client.roomid].name
-    )}`
-  );
+    console.log(
+      `${chalk.green(client.username)} is leaving ${chalk.blueBright(
+        rooms[client.roomid].name
+      )}`
+    );
 
-  delete rooms[client.roomid].clients[id];
-  client.roomid = null;
+    delete rooms[client.roomid].clients[id];
+    client.roomid = null;
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 // ----- HANDLERS -----
