@@ -18,6 +18,7 @@ const room_name_input = document.getElementById("room-name");
 const server_down = document.getElementById("server-down");
 
 // Chat functionaltiy
+const chat_box = document.getElementById("chat");
 const chat_input = document.getElementById("input");
 const messages_container = document.getElementById("messages");
 let at_bottom = true;
@@ -56,6 +57,21 @@ function chat(userdata, text, style) {
   }
 }
 
+// Sets what screen the user is on
+// true = joining a room
+// false = in a room
+function in_room(bool) {
+  if (bool) {
+    room_info.style = "top: 1%;";
+    content.style = "top: -50%";
+    chat_box.style = "left: 0%";
+  } else {
+    content.style = "top: 50%";
+    room_info.style = "top: -10%;";
+    chat_box.style = "left: -50%";
+  }
+}
+
 // WEBSOCKET HANDLERS
 function set_username(data) {
   username_input.value = data.username;
@@ -64,8 +80,7 @@ function set_username(data) {
 
 function join_room(data) {
   room_id_text.innerHTML = data.code;
-  room_info.style = "top: 1%;";
-  content.style = "top: -30%";
+  in_room(true);
 }
 
 function attempt_join(data) {
@@ -97,8 +112,7 @@ function delete_room(data) {
 }
 
 function leave_room_handle(_) {
-  room_info.style = "top: -10%;";
-  content.style = "top: 50%";
+  in_room(false);
 }
 
 function display_rooms(data) {
@@ -181,8 +195,7 @@ function connect() {
     console.log("Connection closed. Retrying connection.");
 
     server_down.style = "display: flex";
-    room_info.style = "top: -10%;";
-    content.style = "top: 50%";
+    in_room(false);
 
     rooms_container.childNodes.forEach((child) => {
       child.remove();

@@ -56,11 +56,12 @@ function get_room(code) {
 }
 
 function leave_room(id) {
+  let client = clients[id];
+
   if (!rooms[client.roomid]) {
     return;
   }
 
-  let client = clients[id];
   let room = rooms[client.roomid];
 
   console.log(

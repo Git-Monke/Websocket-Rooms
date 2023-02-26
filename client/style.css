@@ -128,11 +128,12 @@
   display: none;
 }
 
-.chat {
+#chat {
   border: 1px solid black;
   width: 30vw;
   height: 30vh;
   top: 100%;
+  left: 0%;
   transform: translate(1%, -102%);
   position: absolute;
   display: grid;
