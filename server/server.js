@@ -30,9 +30,18 @@ function gen_code(length) {
   return result;
 }
 
+// Emits to every single connected client.
 function emit(request, data) {
   for (let [_, client] of Object.entries(clients)) {
     client.ws.send(wrap(request, data));
+  }
+}
+
+// Emits a message to every item in sockets
+// Sockets is a list of WebSockets
+function emit_to(sockets, request, data) {
+  for (let [_, ws] of Object.entries(sockets)) {
+    ws.send(wrap(request, data));
   }
 }
 
@@ -47,45 +56,58 @@ function get_room(code) {
 }
 
 function leave_room(id) {
-  try {
-    let client = clients[id];
-
-    console.log(
-      `${chalk.green(client.username)} is leaving ${chalk.blueBright(
-        rooms[client.roomid].name
-      )}`
-    );
-
-    delete rooms[client.roomid].clients[id];
-    client.roomid = null;
-  } catch (err) {
-    console.log(err);
+  if (!rooms[client.roomid]) {
+    return;
   }
+
+  let client = clients[id];
+  let room = rooms[client.roomid];
+
+  console.log(
+    `${chalk.green(client.username)} is leaving ${chalk.blueBright(
+      rooms[client.roomid].name
+    )}`
+  );
+
+  emit_to(room.clients, "server::user_status_update", {
+    username: client.username,
+    join: false,
+  });
+
+  delete room.clients[id];
+  client.roomid = null;
 }
 
 // ----- HANDLERS -----
 
 function set_username(data, _, id) {
+  // Log that they are changing their username
   console.log(
     `${chalk.green(
       clients[id].username
     )} changed their username to ${chalk.green(data.username)}`
   );
+
+  // Change their username
   clients[id].username = data.username;
 }
 
 function create_room(data, ws, id) {
+  // Check that the person only has one room
   if (rooms[id]) {
     return;
   }
 
+  // Generate a code and a default name if they don't provide one
   let code = gen_code(6);
   let name = data.name || `${clients[id].username}'s Room`;
 
+  // Log that they are making a server
   console.log(
     `${chalk.green(clients[id].username)} created ${chalk.blueBright(name)}`
   );
 
+  // Create the room
   rooms[id] = {
     clients: {},
     code: code,
@@ -94,12 +116,14 @@ function create_room(data, ws, id) {
     public: data.public,
   };
 
+  // Tell the client to join the room
   ws.send(
     wrap("server::attempt_join", {
       code: code,
     })
   );
 
+  // If the room is public, tell every client that there is a new public room.
   if (data.public) {
     emit("server::new_public_room", {
       name: name,
@@ -110,24 +134,38 @@ function create_room(data, ws, id) {
 }
 
 function join_room(data, ws, id) {
+  // Get the room by the 6 letter code sent by the client
   let room = get_room(data.code);
 
+  // If the code is invalid, reject the request.
   if (!room) {
     return;
   }
 
+  // Get the client who sent the request
+  let client = clients[id];
+
+  // Log that they are joining
   console.log(
-    `${chalk.green(clients[id].username)} joined ${chalk.blueBright(room.name)}`
+    `${chalk.green(client.username)} joined ${chalk.blueBright(room.name)}`
   );
 
+  // Update their room id, and add their WebSocket to the clients in that room
   room.clients[id] = ws;
-  clients[id].roomid = room.id;
+  client.roomid = room.id;
 
+  // Send a message to the client they successfully joined
   ws.send(
     wrap("server::join_room", {
       code: data.code,
     })
   );
+
+  // Tell every user in that room that they successfully joined
+  emit_to(room.clients, "server::user_status_update", {
+    username: client.username,
+    join: true,
+  });
 }
 
 function leave_room_handle(_, __, id) {
@@ -152,6 +190,30 @@ function get_pub_rooms(_, ws) {
   ws.send(wrap("server::public_rooms", pub_rooms));
 }
 
+function send_message(data, _, id) {
+  let client = clients[id];
+
+  // If the client is not in a room, reject the request.
+  if (!client.roomid) {
+    return;
+  }
+
+  // Get the room the client is in
+  let room = rooms[client.roomid];
+
+  // If that room is nonexistant (invalid roomid), reject the request.
+  if (!room) {
+    return;
+  }
+
+  // Tell every client that is connected to that room that a message was sent
+  emit_to(room.clients, "server::message", {
+    id: id,
+    username: client.username,
+    message: data,
+  });
+}
+
 let handles = {
   // "serverorclient::handle-name": functionname
   "client::set_username": set_username,
@@ -159,6 +221,7 @@ let handles = {
   "client::join_room": join_room,
   "client::leave_room": leave_room_handle,
   "client::get_public_rooms": get_pub_rooms,
+  "client::send_message": send_message,
 };
 
 function handle(payload, ws, id) {

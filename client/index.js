@@ -17,6 +17,11 @@ const rooms_container = document.getElementById("rooms");
 const room_name_input = document.getElementById("room-name");
 const server_down = document.getElementById("server-down");
 
+// Chat functionaltiy
+const chat_input = document.getElementById("input");
+const messages_container = document.getElementById("messages");
+let at_bottom = true;
+
 let username;
 
 function wrap(request, data) {
@@ -28,6 +33,27 @@ function wrap(request, data) {
 
 function format_username(input) {
   return input.replace(/[^a-zA-Z0-9_]+/g, "");
+}
+
+function chat(userdata, text, style) {
+  let new_chat = document.createElement("p");
+
+  // Could probably be done in a single line, but frankly the lack of readability that would bring makes it not worth it
+  if (userdata) {
+    new_chat.innerHTML = `<span title="${userdata.id}">${userdata.username}</span>: ${text}`;
+  } else {
+    new_chat.innerHTML = `${text}`;
+  }
+
+  if (style) {
+    new_chat.style = style;
+  }
+
+  messages_container.appendChild(new_chat);
+
+  if (at_bottom) {
+    messages_container.scrollTop = messages_container.scrollHeight;
+  }
 }
 
 // WEBSOCKET HANDLERS
@@ -81,6 +107,26 @@ function display_rooms(data) {
   }
 }
 
+function chat_handle(data) {
+  chat(
+    {
+      username: data.username,
+      id: data.id,
+    },
+    data.message
+  );
+}
+
+// This is absolutely not the best way to do this.
+// However I am on a time crunch and have to work on more important things
+// Feel free to refactor!
+function user_status_update(data) {
+  let username = data.username;
+  let message = (data.join == true && "joined") || "left";
+  let style = (data.join == true && "color: green;") || "color: red;";
+  chat(null, `${username} ${message}`, `${style}`);
+}
+
 let handles = {
   // "serverorclient::handle-name": functionname
   "server::username": set_username,
@@ -90,6 +136,8 @@ let handles = {
   "server::delete_public_room": delete_room,
   "server::leave_room": leave_room_handle,
   "server::public_rooms": display_rooms,
+  "server::message": chat_handle,
+  "server::user_status_update": user_status_update,
 };
 
 function handle(payload) {
@@ -166,6 +214,12 @@ document.addEventListener("keypress", (keyevent) => {
         })
       );
     }
+
+    if (chat_input.value != "" && chat_input == document.activeElement) {
+      ws.send(wrap("client::send_message", chat_input.value));
+
+      chat_input.value = "";
+    }
   }
 });
 
@@ -197,5 +251,20 @@ join_room_button.addEventListener("click", (_) => {
 username_input.addEventListener("input", (_) => {
   if (username_input.value != username) {
     username_input.style = "border: 2px solid red";
+  }
+});
+
+messages_container.addEventListener("scroll", (data) => {
+  console.log();
+
+  if (
+    messages_container.scrollHeight -
+      messages_container.clientHeight -
+      messages_container.scrollTop ==
+    0
+  ) {
+    at_bottom = true;
+  } else {
+    at_bottom = false;
   }
 });

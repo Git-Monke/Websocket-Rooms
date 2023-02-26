@@ -127,3 +127,30 @@
   box-shadow: inset 10px 10px 200px 10px rgba(0, 0, 0, 0.9);
   display: none;
 }
+
+.chat {
+  border: 1px solid black;
+  width: 30vw;
+  height: 30vh;
+  top: 100%;
+  transform: translate(1%, -102%);
+  position: absolute;
+  display: grid;
+  grid-template-rows: 1fr fit-content(0px);
+}
+
+#messages {
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+}
+
+#input {
+  width: 100%;
+  transition: background-color 50ms ease-in;
+}
+
+#input:focus {
+  outline: none;
+  background-color: rgb(211, 211, 211, 0.5);
+}
