@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Websocket Demo</title>
+  </head>
+  <body>
+    <section class="content">
+      <div id="connect-container" class="container">
+        <form id="username-container">
+          <h3 id="username-header">Username:</h3>
+          <h4 id="username-output">Username is already taken</h4>
+        </form>
+        <input id="username" type="text" placeholder="Username" />
+        <h1>Connect to Room</h1>
+        <div id="pub-room">
+          <h2>Public Rooms:</h2>
+          <div id="rooms"></div>
+        </div>
+        <div id="join-code-container">
+          <h2>Join Code:</h2>
+          <input id="join-code" type="text" />
+          <button id="join">JOIN</button>
+        </div>
+      </div>
+      <div id="new-room-container" class="container">
+        <h1>Create a room</h1>
+        <button id="create-room">Create new room</button>
+        <div>
+          <label for="room-publicity">Public?: </label>
+          <input id="room-publicity" type="checkbox" />
+        </div>
+      </div>
+    </section>
+
+    <script src="index.js"></script>
+  </body>
+</html>
