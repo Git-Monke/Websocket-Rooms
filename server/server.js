@@ -56,12 +56,15 @@ function get_room(code) {
 }
 
 function leave_room(id) {
+  // Get the client
   let client = clients[id];
 
+  // If they aren't in a valid room, don't do anything
   if (!rooms[client.roomid]) {
     return;
   }
 
+  // Get the room
   let room = rooms[client.roomid];
 
   console.log(
@@ -70,11 +73,13 @@ function leave_room(id) {
     )}`
   );
 
+  // Tell everyone in that room they are leaving the room
   emit_to(room.clients, "server::user_status_update", {
     username: client.username,
     join: false,
   });
 
+  // Remove the client from that room
   delete room.clients[id];
   client.roomid = null;
 }
@@ -170,12 +175,14 @@ function join_room(data, ws, id) {
 }
 
 function leave_room_handle(_, __, id) {
+  // Self explanatory
   if (clients[id].roomid) {
     leave_room(id);
   }
 }
 
 function get_pub_rooms(_, ws) {
+  // Self explanatory
   let pub_rooms = [];
 
   for (let [_, room] of Object.entries(rooms)) {
@@ -207,6 +214,8 @@ function send_message(data, _, id) {
     return;
   }
 
+  console.log(`${chalk.blueBright(client.username)}: ${data}`);
+
   // Tell every client that is connected to that room that a message was sent
   emit_to(room.clients, "server::message", {
     id: id,
@@ -215,6 +224,7 @@ function send_message(data, _, id) {
   });
 }
 
+// The list of events and their respective handlers
 let handles = {
   // "serverorclient::handle-name": functionname
   "client::set_username": set_username,
@@ -245,6 +255,7 @@ function handle(payload, ws, id) {
 }
 
 server.addListener("connection", (ws) => {
+  // Generate user information
   let username = generateUsername();
   let userid = v4();
 
@@ -254,6 +265,7 @@ server.addListener("connection", (ws) => {
     )}`
   );
 
+  // Store the users' info in the list of clients
   clients[userid] = {
     ws: ws,
     username: username,
@@ -261,6 +273,7 @@ server.addListener("connection", (ws) => {
     roomid: null,
   };
 
+  // Send them their generated username
   ws.send(
     wrap("server::username", {
       username: username,
@@ -277,28 +290,35 @@ server.addListener("connection", (ws) => {
   });
 
   ws.on("close", (_) => {
+    // Check if the user owns the room
     if (rooms[userid]) {
+      // If the room is public, tell everyone to delete that room from their list of joinable rooms
       if (rooms[userid].public) {
         emit("server::delete_public_room", {
           id: userid,
         });
       }
 
+      // Kick all users that are connected to that room
       for (let [_, ws] of Object.entries(rooms[userid].clients)) {
         ws.send(wrap("server::leave_room", {}));
       }
 
+      // Log the room is being deleted
       console.log(
         `${chalk.green(clients[userid].username)} deleted ${chalk.blueBright(
           rooms[userid].name
         )}`
       );
 
+      // Delete the room
       delete rooms[userid];
     } else if (clients[userid].roomid) {
+      // Otherwise just leave the room
       leave_room(userid);
     }
 
+    // Delete the client
     delete clients[userid];
   });
 });

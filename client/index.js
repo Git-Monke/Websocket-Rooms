@@ -1,29 +1,34 @@
 let ws;
 connect();
 
-const username_input = document.getElementById("username");
-const username_error_output = document.getElementById("username-output");
+// By setting this function to be a dollar sign cleans things up a lot
+const $ = document.getElementById;
 
-const publicity_box = document.getElementById("room-publicity");
+const username_input = $("username");
+const username_error_output = $("username-output");
 
-const content = document.getElementById("content");
-const create_room_button = document.getElementById("create-room");
-const join_room_button = document.getElementById("join");
-const join_code = document.getElementById("join-code");
+const publicity_box = $("room-publicity");
 
-const room_id_text = document.getElementById("room-id-text");
-const room_info = document.getElementById("room-info");
-const rooms_container = document.getElementById("rooms");
-const room_name_input = document.getElementById("room-name");
-const server_down = document.getElementById("server-down");
+const content = $("content");
+const create_room_button = $("create-room");
+const join_room_button = $("join");
+const join_code = $("join-code");
 
-// Chat functionaltiy
-const chat_box = document.getElementById("chat");
-const chat_input = document.getElementById("input");
-const messages_container = document.getElementById("messages");
+const room_id_text = $("room-id-text");
+const room_info = $("room-info");
+const rooms_container = $("rooms");
+const room_name_input = $("room-name");
+const server_down = $("server-down");
+
+const chat_box = $("chat");
+const chat_input = $("input");
+const messages_container = $("messages");
+
+// at_bottom is if the user is currently at the bottom of the chat box
 let at_bottom = true;
-
 let username;
+
+// ----- AUXILLARY FUNCTIONS -----
 
 function wrap(request, data) {
   return JSON.stringify({
@@ -39,7 +44,6 @@ function format_username(input) {
 function chat(userdata, text, style) {
   let new_chat = document.createElement("p");
 
-  // Could probably be done in a single line, but frankly the lack of readability that would bring makes it not worth it
   if (userdata) {
     new_chat.innerHTML = `<span title="${userdata.id}">${userdata.username}</span>: ${text}`;
   } else {
@@ -76,7 +80,8 @@ function in_room(bool) {
   }
 }
 
-// WEBSOCKET HANDLERS
+// ----- WEBSOCKET FUNCTIONALITY -----
+
 function set_username(data) {
   username_input.value = data.username;
   username = data.username;
@@ -211,7 +216,7 @@ function connect() {
   });
 }
 
-// DOCUMENT FUNCTIONALITY
+// ----- DOCUMENT FUNCTIONALITY -----
 
 document.addEventListener("keypress", (keyevent) => {
   if (keyevent.key == "Enter") {

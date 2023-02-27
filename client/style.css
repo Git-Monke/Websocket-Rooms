@@ -156,3 +156,13 @@
   outline: none;
   background-color: rgb(211, 211, 211, 0.5);
 }
+
+#room-name {
+  border: 2px solid black;
+  font-size: 1rem;
+  margin: 5% 0%;
+}
+
+#new-room-container {
+  padding: 1%;
+}
