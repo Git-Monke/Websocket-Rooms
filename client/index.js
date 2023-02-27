@@ -1,28 +1,25 @@
 let ws;
 connect();
 
-// By setting this function to be a dollar sign cleans things up a lot
-const $ = document.getElementById;
+const username_input = document.getElementById("username");
+const username_error_output = document.getElementById("username-output");
 
-const username_input = $("username");
-const username_error_output = $("username-output");
+const publicity_box = document.getElementById("room-publicity");
 
-const publicity_box = $("room-publicity");
+const content = document.getElementById("content");
+const create_room_button = document.getElementById("create-room");
+const join_room_button = document.getElementById("join");
+const join_code = document.getElementById("join-code");
 
-const content = $("content");
-const create_room_button = $("create-room");
-const join_room_button = $("join");
-const join_code = $("join-code");
+const room_id_text = document.getElementById("room-id-text");
+const room_info = document.getElementById("room-info");
+const rooms_container = document.getElementById("rooms");
+const room_name_input = document.getElementById("room-name");
+const server_down = document.getElementById("server-down");
 
-const room_id_text = $("room-id-text");
-const room_info = $("room-info");
-const rooms_container = $("rooms");
-const room_name_input = $("room-name");
-const server_down = $("server-down");
-
-const chat_box = $("chat");
-const chat_input = $("input");
-const messages_container = $("messages");
+const chat_box = document.getElementById("chat");
+const chat_input = document.getElementById("input");
+const messages_container = document.getElementById("messages");
 
 // at_bottom is if the user is currently at the bottom of the chat box
 let at_bottom = true;
@@ -183,7 +180,7 @@ function handle(payload) {
 }
 
 function connect() {
-  ws = new WebSocket("ws://192.168.1.158:12345");
+  ws = new WebSocket("ws://10.198.216.153:12345");
 
   ws.addEventListener("open", (_) => {
     console.log("Successfully connected to the server!");

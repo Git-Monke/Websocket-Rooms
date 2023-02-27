@@ -4,7 +4,7 @@ import { Chalk } from "chalk";
 import { generateUsername } from "unique-username-generator";
 
 const chalk = new Chalk();
-const server = new WebSocketServer({ host: "192.168.1.158", port: 12345 });
+const server = new WebSocketServer({ host: "10.198.216.153", port: 12345 });
 
 let clients = {};
 let rooms = {};
