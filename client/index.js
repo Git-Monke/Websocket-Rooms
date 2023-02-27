@@ -1,5 +1,4 @@
 let ws;
-connect();
 
 const username_input = document.getElementById("username");
 const username_error_output = document.getElementById("username-output");
@@ -20,6 +19,13 @@ const server_down = document.getElementById("server-down");
 const chat_box = document.getElementById("chat");
 const chat_input = document.getElementById("input");
 const messages_container = document.getElementById("messages");
+
+const connect_button = document.getElementById("connect");
+const ip_input = document.getElementById("ip-input");
+const port_input = document.getElementById("port-input");
+let ip = "";
+let port = "";
+let connecting = false;
 
 // at_bottom is if the user is currently at the bottom of the chat box
 let at_bottom = true;
@@ -180,7 +186,9 @@ function handle(payload) {
 }
 
 function connect() {
-  ws = new WebSocket("ws://10.198.216.153:12345");
+  connecting = true;
+  console.log(`Attempting to connect to ws://${ip}:${port}`);
+  ws = new WebSocket(`ws://${ip}:${port}`);
 
   ws.addEventListener("open", (_) => {
     console.log("Successfully connected to the server!");
@@ -198,6 +206,7 @@ function connect() {
   });
 
   ws.addEventListener("close", (_) => {
+    connecting = false;
     console.log("Connection closed. Retrying connection.");
 
     server_down.style = "display: flex";
@@ -206,10 +215,6 @@ function connect() {
     rooms_container.childNodes.forEach((child) => {
       child.remove();
     });
-
-    setTimeout(() => {
-      connect();
-    }, 1000);
   });
 }
 
@@ -287,3 +292,17 @@ messages_container.addEventListener("scroll", (data) => {
     at_bottom = false;
   }
 });
+
+connect_button.addEventListener("click", _ => {
+  if (connecting) { return }
+
+  ip = ip_input.value;
+  port = port_input.value;
+
+  try {
+    connect();
+  } catch (err) {
+    connecting = false;
+    console.log(err);
+  }
+})
